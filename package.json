@@ -48,16 +48,16 @@
   },
   "# Dependencies required to run tests": "",
   "devDependencies": {
-    "eslint": "^4.7.2",
+    "eslint": "^4.19.1",
     "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-mocha": "^4.11.0",
-    "eslint-plugin-node": "^5.1.1",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^3.0.1",
-    "eslint-watch": "^3.1.2",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-mocha": "^4.12.1",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.8.0",
+    "eslint-plugin-standard": "^3.1.0",
+    "eslint-watch": "^6.0.1",
     "expect.js": "^0.3.1",
-    "mocha": "^3.5.3"
+    "mocha": "^7.1.0"
   },
   "# White list the files to pack by npm publish": "",
   "files": [
