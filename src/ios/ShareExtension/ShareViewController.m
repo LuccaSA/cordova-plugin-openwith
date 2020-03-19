@@ -160,11 +160,11 @@
                     @"utis": utis,
                     @"name": suggestedName
                 };
-                [self.userDefaults setObject:dict forKey:@"image"];
+                [self.userDefaults setObject:dict forKey:@"items"];
                 [self.userDefaults synchronize];
 
                 // Emit a URL that opens the cordova app
-                NSString *url = [NSString stringWithFormat:@"%@://image", SHAREEXT_URL_SCHEME];
+                NSString *url = [NSString stringWithFormat:@"%@://items", SHAREEXT_URL_SCHEME];
 
                 // Not allowed:
                 // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
