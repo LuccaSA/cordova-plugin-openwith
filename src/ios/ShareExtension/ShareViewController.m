@@ -117,6 +117,16 @@
     }
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    if( [(NSString*)self.contentText length] == 0 ) {
+        [super viewWillAppear:animated];
+    }
+    else {
+        [self.view endEditing:YES];
+        [self didSelectPost];
+    }
+}
+
 - (void) didSelectPost {
 
     [self setup];
