@@ -137,6 +137,7 @@
 
                 NSString *contentText = self.contentText;
                 NSString *webURL = @"";
+                NSString *fileName = @"";
                 NSData *data = [[NSData alloc] init];
                 if([(NSObject*)item isKindOfClass:[NSURL class]]) {
                     if ([[(NSURL*)item scheme] isEqualToString:@"http"] || [[(NSURL*)item scheme] isEqualToString:@"https"]) {
@@ -144,6 +145,7 @@
                     }
                     else {
                         data = [NSData dataWithContentsOfURL:(NSURL*)item];
+                        fileName = [(NSURL*)item lastPathComponent];
                     }
                 }
                 else if([(NSObject*)item isKindOfClass:[NSData class]]) {
@@ -156,7 +158,7 @@
                     data = UIImagePNGRepresentation((UIImage*)item);
                 }
 
-                NSString *suggestedName = @"";
+                NSString *suggestedName = fileName;
                 if ([itemProvider respondsToSelector:NSSelectorFromString(@"getSuggestedName")]) {
                     suggestedName = [itemProvider valueForKey:@"suggestedName"];
                 }
