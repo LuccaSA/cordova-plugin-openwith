@@ -138,6 +138,7 @@
                 NSString *contentText = self.contentText;
                 NSString *webURL = @"";
                 NSString *fileName = @"";
+                NSString *filePath = @"";
                 NSData *data = [[NSData alloc] init];
                 if([(NSObject*)item isKindOfClass:[NSURL class]]) {
                     if ([[(NSURL*)item scheme] isEqualToString:@"http"] || [[(NSURL*)item scheme] isEqualToString:@"https"]) {
@@ -146,6 +147,7 @@
                     else {
                         data = [NSData dataWithContentsOfURL:(NSURL*)item];
                         fileName = [(NSURL*)item lastPathComponent];
+                        filePath = [(NSURL*)item absoluteString];
                     }
                 }
                 else if([(NSObject*)item isKindOfClass:[NSData class]]) {
@@ -179,7 +181,8 @@
                     @"uti": uti,
                     @"utis": utis,
                     @"name": suggestedName,
-                    @"url": webURL
+                    @"url": webURL,
+                    @"path": filePath
                 };
                 [self.userDefaults setObject:dict forKey:@"items"];
                 [self.userDefaults synchronize];

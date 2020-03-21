@@ -231,6 +231,7 @@ static NSDictionary* launchOptions = nil;
     NSString *text = dict[@"text"];
     NSString *name = dict[@"name"];
     NSString *url = dict[@"url"];
+    NSString *path = dict[@"path"];
     self.backURL = dict[@"backURL"];
     NSString *type = [self mimeTypeFromUti:dict[@"uti"]];
     if (![data isKindOfClass:NSData.class] || ![text isKindOfClass:NSString.class]) {
@@ -262,7 +263,8 @@ static NSDictionary* launchOptions = nil;
             @"utis": utis,
             @"uri": uri,
             @"name": name,
-            @"url": url
+            @"url": url,
+            @"path": path
         }]
     }];
     pluginResult.keepCallback = [NSNumber numberWithBool:YES];
