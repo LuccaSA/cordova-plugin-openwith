@@ -95,8 +95,17 @@ function getPreferenceValue(configXml, name) {
 }
 
 function getCordovaParameter(configXml, variableName) {
-  var variable = packageJson.cordova.plugins[PLUGIN_ID][variableName];
-  if (!variable) {
+  var variable;
+  var arg = process.argv.filter(function(arg) {
+    return arg.indexOf(variableName + '=') == 0;
+  });
+  if (arg.length >= 1) {
+    variable = arg[0].split('=')[1];
+  }
+  else if (packageJson.cordova.plugins[PLUGIN_ID]) {
+    variable = packageJson.cordova.plugins[PLUGIN_ID][variableName];
+  }
+  else {
     variable = getPreferenceValue(configXml, variableName);
   }
   return variable;
