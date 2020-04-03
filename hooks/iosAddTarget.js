@@ -51,6 +51,29 @@ function replacePreferencesInFile(filePath, preferences) {
     fs.writeFileSync(filePath, content);
 }
 
+function arrayFilterUnique(value, index, self) {
+    return self.indexOf(value) === index;
+}
+
+function addEntitlments(filePath, preferences) {
+    var plist = require('plist');
+    var plistContent = plist.parse(fs.readFileSync(filePath, 'utf8'));
+    var parent = 'com.apple.security.application-groups';
+    for (var i = 0; i < preferences.length; i++) {
+        var pref = preferences[i];
+        if (pref.key == '__GROUP_IDENTIFIER__') {
+            if( Array.isArray(plistContent[parent]) ) {
+                plistContent[parent].push( pref.value );
+                plistContent[parent] = plistContent[parent].filter( arrayFilterUnique );
+            }
+            else {
+                plistContent[parent] = [pref.value];
+            }
+        }
+    }
+    fs.writeFileSync(filePath, plist.build(plistContent));
+}
+
 // Determine the full path to the app's xcode project file.
 function findXCodeproject(context, callback) {
   fs.readdir(iosFolder(context), function(err, data) {
@@ -304,12 +327,12 @@ module.exports = function (context) {
       pbxProject.addResourceFile(file.name, {target: target.uuid}, pbxGroupKey);
     });
 
+    // Fix Share Extension bundle identifier
     var configurations = pbxProject.pbxXCBuildConfigurationSection();
     for (var key in configurations) {
       if (typeof configurations[key].buildSettings !== 'undefined') {
         var buildSettingsObj = configurations[key].buildSettings;
         if (typeof buildSettingsObj['PRODUCT_NAME'] !== 'undefined') {
-          buildSettingsObj['CODE_SIGN_ENTITLEMENTS'] = '"ShareExtension/ShareExtension-Entitlements.plist"';
           var productName = buildSettingsObj['PRODUCT_NAME'];
           if (productName.indexOf('ShareExt') >= 0) {
             buildSettingsObj['PRODUCT_BUNDLE_IDENTIFIER'] = bundleIdentifier+BUNDLE_SUFFIX;
@@ -317,6 +340,10 @@ module.exports = function (context) {
         }
       }
     }
+
+    // Add App Group to entitlments
+    addEntitlments(path.join(iosFolder(context), projectName, 'Entitlements-Debug.plist'), preferences);
+    addEntitlments(path.join(iosFolder(context), projectName, 'Entitlements-Release.plist'), preferences);
 
     //Add development team and provisioning profile
     var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'SHAREEXT_PROVISIONING_PROFILE');
