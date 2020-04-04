@@ -214,12 +214,19 @@ function printShareExtensionFiles(files) {
   });
 }
 
-console.log('Adding target "' + PLUGIN_ID + '/ShareExtension" to XCode project');
-
 module.exports = function (context) {
 
   var Q = require('q');
   var deferral = new Q.defer();
+
+  // Prevent double execution
+  // In some cases, cordova executes after_plugin_add hook during a platform add command. Maybe a bug in cordova?
+  if (context.hook == 'after_plugin_add' && RegExp('\\s+platform\\s+add').test(context.cmdLine)){
+    deferral.resolve();
+    return deferral.promise;
+  }
+
+  console.log('Adding target "' + PLUGIN_ID + '/ShareExtension" to XCode project');
 
   packageJson = require(path.join(context.opts.projectRoot, 'package.json'));
 
