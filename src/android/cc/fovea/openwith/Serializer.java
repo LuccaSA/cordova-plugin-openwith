@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Base64;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +31,7 @@ class Serializer {
             final ContentResolver contentResolver,
             final Intent intent)
             throws JSONException {
+        JSONArray textItems = textItemsFromExtras(intent.getExtras());
         JSONArray items = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             items = itemsFromClipData(contentResolver, intent.getClipData());
@@ -39,6 +41,15 @@ class Serializer {
         }
         if (items == null || items.length() == 0) {
             items = itemsFromData(contentResolver, intent.getData());
+        }
+        if (textItems != null) {
+            if (items == null) {
+                items = textItems;
+            } else {
+                for (int i=0; i<textItems.length(); i++) {
+                    items.put(textItems.get(i));
+                }
+            }
         }
         if (items == null) {
             return null;
@@ -79,11 +90,14 @@ class Serializer {
             throws JSONException {
         if (clipData != null) {
             final int clipItemCount = clipData.getItemCount();
-            JSONObject[] items = new JSONObject[clipItemCount];
+            JSONArray items = new JSONArray();
             for (int i = 0; i < clipItemCount; i++) {
-                items[i] = toJSONObject(contentResolver, clipData.getItemAt(i).getUri());
+                if (clipData.getItemAt(i).getUri() != null) {
+                    items.put(toJSONObject(contentResolver, clipData.getItemAt(i).getUri()));
+                }
             }
-            return new JSONArray(items);
+
+            return items;
         }
         return null;
     }
@@ -98,7 +112,7 @@ class Serializer {
         if (extras == null) {
             return null;
         }
-        final JSONObject item = toJSONObject(
+        JSONObject item = toJSONObject(
                 contentResolver,
                 (Uri) extras.get(Intent.EXTRA_STREAM));
         if (item == null) {
@@ -107,6 +121,28 @@ class Serializer {
         final JSONObject[] items = new JSONObject[1];
         items[0] = item;
         return new JSONArray(items);
+    }
+
+    public static JSONArray textItemsFromExtras(
+            final Bundle extras)
+            throws JSONException {
+        if (extras == null) {
+            return null;
+        }
+
+        String subject = extras.getString(Intent.EXTRA_SUBJECT);
+        String text = extras.getString(Intent.EXTRA_TEXT);
+        if (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(subject)) {
+            final JSONObject item = new JSONObject();
+            item.put("type", "text/plain");
+            item.put("text", subject);
+            item.put("urlString", text);
+            final JSONObject[] items = new JSONObject[1];
+            items[0] = item;
+            return new JSONArray(items);
+        }
+
+        return null;
     }
 
     /** Extract the list of items from the intent's getData

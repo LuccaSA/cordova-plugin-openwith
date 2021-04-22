@@ -62,7 +62,7 @@ cordova plugin add cc.fovea.cordova.openwith \
 
 | variable | example | notes |
 |---|---|---|
-| `ANDROID_MIME_TYPE` | image/* | **Android only** Mime type of documents you want to share (wildcards accepted) |
+| `ANDROID_MIME_TYPE` | image/* | **Android only** Mime type of documents you want to share, e.g. `image/*`, `video/*`, `text/*` or `*/*` for all mime types (check [Supporting MIME types](https://developer.android.com/training/sharing/receive.html#supporting-mime-types)) |
 | `IOS_URL_SCHEME` | uniquelonglowercase | **iOS only** Any random long string of lowercase alphabetical characters |
 | `IOS_UNIFORM_TYPE_IDENTIFIER` | public.image | **iOS only** UTI of documents you want to share (check [Apple's System-Declared UTI](https://developer.apple.com/library/content/documentation/Miscellaneous/Reference/UTIRef/Articles/System-DeclaredUniformTypeIdentifiers.html#//apple_ref/doc/uid/TP40009259-SW1)) |
 | `IOS_GROUP_IDENTIFIER` | group.my.app.id | **iOS only** Custom app group name. Default is `group.<YOUR_APP_BUNDLE_ID>.shareextension`. |
