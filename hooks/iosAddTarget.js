@@ -51,6 +51,29 @@ function replacePreferencesInFile(filePath, preferences) {
     fs.writeFileSync(filePath, content);
 }
 
+function arrayFilterUnique(value, index, self) {
+    return self.indexOf(value) === index;
+}
+
+function addEntitlments(filePath, preferences) {
+    var plist = require('plist');
+    var plistContent = plist.parse(fs.readFileSync(filePath, 'utf8'));
+    var parent = 'com.apple.security.application-groups';
+    for (var i = 0; i < preferences.length; i++) {
+        var pref = preferences[i];
+        if (pref.key == '__GROUP_IDENTIFIER__') {
+            if( Array.isArray(plistContent[parent]) ) {
+                plistContent[parent].push( pref.value );
+                plistContent[parent] = plistContent[parent].filter( arrayFilterUnique );
+            }
+            else {
+                plistContent[parent] = [pref.value];
+            }
+        }
+    }
+    fs.writeFileSync(filePath, plist.build(plistContent));
+}
+
 // Determine the full path to the app's xcode project file.
 function findXCodeproject(context, callback) {
   fs.readdir(iosFolder(context), function(err, data) {
@@ -95,8 +118,17 @@ function getPreferenceValue(configXml, name) {
 }
 
 function getCordovaParameter(configXml, variableName) {
-  var variable = packageJson.cordova.plugins[PLUGIN_ID][variableName];
-  if (!variable) {
+  var variable;
+  var arg = process.argv.filter(function(arg) {
+    return arg.indexOf(variableName + '=') == 0;
+  });
+  if (arg.length >= 1) {
+    variable = arg[0].split('=')[1];
+  }
+  else if (packageJson.cordova.plugins[PLUGIN_ID]) {
+    variable = packageJson.cordova.plugins[PLUGIN_ID][variableName];
+  }
+  else {
     variable = getPreferenceValue(configXml, variableName);
   }
   return variable;
@@ -209,12 +241,19 @@ function printShareExtensionFiles(files) {
   });
 }
 
-console.log('Adding target "' + PLUGIN_ID + '/ShareExtension" to XCode project');
-
 module.exports = function (context) {
 
   var Q = require('q');
   var deferral = new Q.defer();
+
+  // Prevent double execution
+  // In some cases, cordova executes after_plugin_add hook during a platform add command. Maybe a bug in cordova?
+  if (context.hook == 'after_plugin_add' && RegExp('\\s+platform\\s+add').test(context.cmdLine)){
+    deferral.resolve();
+    return deferral.promise;
+  }
+
+  console.log('Adding target "' + PLUGIN_ID + '/ShareExtension" to XCode project');
 
   packageJson = require(path.join(context.opts.projectRoot, 'package.json'));
 
@@ -292,12 +331,12 @@ module.exports = function (context) {
       pbxProject.addResourceFile(file.name, {target: target.uuid}, pbxGroupKey);
     });
 
+    // Fix Share Extension bundle identifier
     var configurations = pbxProject.pbxXCBuildConfigurationSection();
     for (var key in configurations) {
       if (typeof configurations[key].buildSettings !== 'undefined') {
         var buildSettingsObj = configurations[key].buildSettings;
         if (typeof buildSettingsObj['PRODUCT_NAME'] !== 'undefined') {
-          buildSettingsObj['CODE_SIGN_ENTITLEMENTS'] = '"ShareExtension/ShareExtension-Entitlements.plist"';
           var productName = buildSettingsObj['PRODUCT_NAME'];
           if (productName.indexOf('ShareExt') >= 0) {
             buildSettingsObj['PRODUCT_BUNDLE_IDENTIFIER'] = bundleIdentifier+BUNDLE_SUFFIX;
@@ -305,6 +344,10 @@ module.exports = function (context) {
         }
       }
     }
+
+    // Add App Group to entitlments
+    addEntitlments(path.join(iosFolder(context), projectName, 'Entitlements-Debug.plist'), preferences);
+    addEntitlments(path.join(iosFolder(context), projectName, 'Entitlements-Release.plist'), preferences);
 
     //Add development team and provisioning profile
     var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'SHAREEXT_PROVISIONING_PROFILE');
