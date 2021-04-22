@@ -127,18 +127,40 @@
         
         if ([itemProvider hasItemConformingToTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER]) {
             [self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
-            
-            [itemProvider loadItemForTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
-                
+
+            NSString *utiToLoad = SHAREEXT_UNIFORM_TYPE_IDENTIFIER;
+            if ([itemProvider.registeredTypeIdentifiers count] > 0) {
+                utiToLoad = itemProvider.registeredTypeIdentifiers[0];
+            }
+
+            [itemProvider loadItemForTypeIdentifier:utiToLoad options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
+
+                NSString *contentText = self.contentText;
+                NSString *webURL = @"";
+                NSString *fileName = @"";
+                NSString *filePath = @"";
                 NSData *data = [[NSData alloc] init];
                 if([(NSObject*)item isKindOfClass:[NSURL class]]) {
-                    data = [NSData dataWithContentsOfURL:(NSURL*)item];
+                    if ([[(NSURL*)item scheme] isEqualToString:@"http"] || [[(NSURL*)item scheme] isEqualToString:@"https"]) {
+                        webURL = [(NSURL*)item absoluteString];
+                    }
+                    else {
+                        data = [NSData dataWithContentsOfURL:(NSURL*)item];
+                        fileName = [(NSURL*)item lastPathComponent];
+                        filePath = [(NSURL*)item absoluteString];
+                    }
+                }
+                else if([(NSObject*)item isKindOfClass:[NSData class]]) {
+                    data = [NSData dataWithData:(NSData *)item];
+                }
+                else if([(NSObject*)item isKindOfClass:[NSString class]]) {
+                    contentText = (NSString*)item;
                 }
                 if([(NSObject*)item isKindOfClass:[UIImage class]]) {
                     data = UIImagePNGRepresentation((UIImage*)item);
                 }
 
-                NSString *suggestedName = @"";
+                NSString *suggestedName = fileName;
                 if ([itemProvider respondsToSelector:NSSelectorFromString(@"getSuggestedName")]) {
                     suggestedName = [itemProvider valueForKey:@"suggestedName"];
                 }
@@ -153,18 +175,20 @@
                     uti = SHAREEXT_UNIFORM_TYPE_IDENTIFIER;
                 }
                 NSDictionary *dict = @{
-                    @"text": self.contentText,
+                    @"text": contentText,
                     @"backURL": self.backURL,
                     @"data" : data,
                     @"uti": uti,
                     @"utis": utis,
-                    @"name": suggestedName
+                    @"name": suggestedName,
+                    @"url": webURL,
+                    @"path": filePath
                 };
-                [self.userDefaults setObject:dict forKey:@"image"];
+                [self.userDefaults setObject:dict forKey:@"items"];
                 [self.userDefaults synchronize];
 
                 // Emit a URL that opens the cordova app
-                NSString *url = [NSString stringWithFormat:@"%@://image", SHAREEXT_URL_SCHEME];
+                NSString *url = [NSString stringWithFormat:@"%@://items", SHAREEXT_URL_SCHEME];
 
                 // Not allowed:
                 // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
