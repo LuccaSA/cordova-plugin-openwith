@@ -121,6 +121,20 @@ function getShareExtensionFiles(context) {
   return files;
 }
 
+function removeFolderRecursiveSync(source) {
+  if (fs.existsSync(source)) {
+    fs.readdirSync(source).forEach((file, index) => {
+      var curSource = path.join(source, file);
+      if (fs.lstatSync(curSource).isDirectory()) { // recurse
+        removeFolderRecursiveSync(curSource);
+      } else { // delete file
+        fs.unlinkSync(curSource);
+      }
+    });
+    fs.rmdirSync(source);
+  }
+};
+
 console.log('Removing target "' + PLUGIN_ID + '/ShareExtension" to XCode project');
 
 module.exports = function (context) {
@@ -134,14 +148,18 @@ module.exports = function (context) {
 
     var pbxProjectPath = path.join(projectFolder, 'project.pbxproj');
     var pbxProject = parsePbxProject(context, pbxProjectPath);
-    var files = getShareExtensionFiles(context);
 
     // Find if the project already contains the target and group
-    var target = pbxProject.pbxTargetByName('ShareExtension');
+    var target = pbxProject.pbxTargetByName('ShareExt');
+    if( !target ) {
+      target = pbxProject.pbxTargetByName('"ShareExt"');
+    }
     var pbxGroupKey = pbxProject.findPBXGroupKey({name: 'ShareExtension'});
 
     // Remove the PbxGroup from cordovas "CustomTemplate"-group
     if (pbxGroupKey) {
+      var files = getShareExtensionFiles(context);
+
       var customTemplateKey = pbxProject.findPBXGroupKey({name: 'CustomTemplate'});
       pbxProject.removeFromPbxGroup(pbxGroupKey, customTemplateKey);
 
@@ -159,6 +177,25 @@ module.exports = function (context) {
       files.resource.forEach(function(file) {
         pbxProject.removeResourceFile(file.name, {target: target.uuid}, pbxGroupKey);
       });
+
+      // Remove the PbxGroup
+      pbxProject.removePbxGroup('ShareExtension');
+
+      // Remove ShareExt from PbxCopyfilesBuildPhase
+      pbxProject.removeCopyfile('ShareExt.appex');
+
+      // Remove ShareExtension target sections
+      var targetSections = pbxProject.pbxNativeTargetSection();
+      for (var key in targetSections) {
+        if ( targetSections[key].name == 'ShareExt' || targetSections[key].name == '"ShareExt"' ) {
+          var keyComment = key+'_comment';
+          delete targetSections[key];
+          delete targetSections[keyComment];
+        }
+      }
+
+      // Remove ShareExtension dir from ios plateform
+      removeFolderRecursiveSync(path.join(iosFolder(context), 'ShareExtension'));
     }
 
     // Add a new PBXFrameworksBuildPhase for the Frameworks used by the Share Extension
