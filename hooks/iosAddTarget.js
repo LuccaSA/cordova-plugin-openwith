@@ -138,7 +138,7 @@ function getCordovaParameter(configXml, variableName) {
 function getBundleId(context, configXml) {
   var elementTree = require('elementtree');
   var etree = elementTree.parse(configXml);
-  return etree.getroot().get('id');
+  return etree.getroot().get('ios-CFBundleIdentifier');
 }
 
 function parsePbxProject(context, pbxProjectPath) {
