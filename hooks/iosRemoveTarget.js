@@ -29,15 +29,11 @@
 // THE SOFTWARE.
 //
 
-const PLUGIN_ID = "cc.fovea.cordova.openwith";
+const { PLUGIN_ID, redError } = require("./utils");
 const BUNDLE_SUFFIX = ".shareextension";
 
 var fs = require('fs');
 var path = require('path');
-
-function redError(message) {
-    return new Error('"' + PLUGIN_ID + '" \x1b[1m\x1b[31m' + message + '\x1b[0m');
-}
 
 // Determine the full path to the app's xcode project file.
 function findXCodeproject(context, callback) {

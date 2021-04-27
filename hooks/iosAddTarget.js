@@ -29,17 +29,13 @@
 // THE SOFTWARE.
 //
 
-const PLUGIN_ID = 'cc.fovea.cordova.openwith';
+const { PLUGIN_ID, redError } = require("./utils");
 const BUNDLE_SUFFIX = '.shareextension';
 
 var fs = require('fs');
 var path = require('path');
 var packageJson;
 var bundleIdentifier;
-
-function redError(message) {
-    return new Error('"' + PLUGIN_ID + '" \x1b[1m\x1b[31m' + message + '\x1b[0m');
-}
 
 function replacePreferencesInFile(filePath, preferences) {
     var content = fs.readFileSync(filePath, 'utf8');
