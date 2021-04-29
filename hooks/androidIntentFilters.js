@@ -31,6 +31,11 @@ function updateMimeTypes(manifest, mimeTypes) {
       })
     );
     intentFilter.append(
+      new et.Element("action", {
+        "android:name": "android.intent.action.SEND_MULTIPLE",
+      })
+    );
+    intentFilter.append(
       new et.Element("category", {
         "android:name": "android.intent.category.DEFAULT",
       })
@@ -64,10 +69,8 @@ module.exports = function (context) {
     "main",
     "AndroidManifest.xml"
   );
+  const pluginProperties = packageJson.cordova.plugins["cc.fovea.cordova.openwith"];
 
-  const mimeTypes =
-    packageJson.cordova.plugins["cc.fovea.cordova.openwith"][
-      "ANDROID_MIME_TYPES"
-    ];
-  updateMimeTypes(manifestPath, mimeTypes.split(","));
+  const mimeTypes = pluginProperties["ANDROID_MIME_TYPES"].split(",");
+  updateMimeTypes(manifestPath, mimeTypes);
 };

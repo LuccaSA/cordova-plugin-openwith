@@ -41,7 +41,6 @@ SOFTWARE.
     <preference name="IOS_UNIFORM_TYPE_IDENTIFIER" />
     <preference name="IOS_GROUP_IDENTIFIER" />
     <preference name="ANDROID_MIME_TYPES" />
-    <preference name="ANDROID_EXTRA_ACTIONS" default=" " />
 
     <!-- ios -->
     <platform name="ios">
