@@ -32,9 +32,9 @@
 #import "ShareViewController.h"
 
 @interface ShareViewController : SLComposeServiceViewController {
-    int _verbosityLevel;
-    NSUserDefaults *_userDefaults;
-    NSString *_backURL;
+	int _verbosityLevel;
+	NSUserDefaults *_userDefaults;
+	NSString *_backURL;
 }
 @property (nonatomic) int verbosityLevel;
 @property (nonatomic,retain) NSUserDefaults *userDefaults;
@@ -57,9 +57,9 @@
 @synthesize backURL = _backURL;
 
 - (void) log:(int)level message:(NSString*)message {
-    if (level >= self.verbosityLevel) {
-        NSLog(@"[ShareViewController.m]%@", message);
-    }
+	if (level >= self.verbosityLevel) {
+		NSLog(@"[ShareViewController.m]%@", message);
+	}
 }
 - (void) debug:(NSString*)message { [self log:VERBOSITY_DEBUG message:message]; }
 - (void) info:(NSString*)message { [self log:VERBOSITY_INFO message:message]; }
@@ -67,221 +67,233 @@
 - (void) error:(NSString*)message { [self log:VERBOSITY_ERROR message:message]; }
 
 - (void) setup {
-    self.userDefaults = [[NSUserDefaults alloc] initWithSuiteName:SHAREEXT_GROUP_IDENTIFIER];
-    self.verbosityLevel = [self.userDefaults integerForKey:@"verbosityLevel"];
-    [self debug:@"[setup]"];
+	self.userDefaults = [[NSUserDefaults alloc] initWithSuiteName:SHAREEXT_GROUP_IDENTIFIER];
+	self.verbosityLevel = [self.userDefaults integerForKey:@"verbosityLevel"];
+	[self debug:@"[setup]"];
 }
 
 - (BOOL) isContentValid {
-    return YES;
+	return YES;
 }
 
 - (void) openURL:(nonnull NSURL *)url {
 
-    SEL selector = NSSelectorFromString(@"openURL:options:completionHandler:");
+	SEL selector = NSSelectorFromString(@"openURL:options:completionHandler:");
 
-    UIResponder* responder = self;
-    while ((responder = [responder nextResponder]) != nil) {
-        NSLog(@"responder = %@", responder);
-        if([responder respondsToSelector:selector] == true) {
-            NSMethodSignature *methodSignature = [responder methodSignatureForSelector:selector];
-            NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:methodSignature];
+	UIResponder* responder = self;
+	while ((responder = [responder nextResponder]) != nil) {
+		NSLog(@"responder = %@", responder);
+		if([responder respondsToSelector:selector] == true) {
+			NSMethodSignature *methodSignature = [responder methodSignatureForSelector:selector];
+			NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:methodSignature];
 
-            // Arguments
-            void (^completion)(BOOL success) = ^void(BOOL success) {
-                NSLog(@"Completions block: %i", success);
-            };
-            if (@available(iOS 13.0, *)) {
-                UISceneOpenExternalURLOptions * options = [[UISceneOpenExternalURLOptions alloc] init];
-                options.universalLinksOnly = false;
-                
-                [invocation setTarget: responder];
-                [invocation setSelector: selector];
-                [invocation setArgument: &url atIndex: 2];
-                [invocation setArgument: &options atIndex:3];
-                [invocation setArgument: &completion atIndex: 4];
-                [invocation invoke];
-                break;
-            } else {
-                NSDictionary<NSString *, id> *options = [NSDictionary dictionary];
-                
-                [invocation setTarget: responder];
-                [invocation setSelector: selector];
-                [invocation setArgument: &url atIndex: 2];
-                [invocation setArgument: &options atIndex:3];
-                [invocation setArgument: &completion atIndex: 4];
-                [invocation invoke];
-                break;
-            }
-        }
-    }
+			// Arguments
+			void (^completion)(BOOL success) = ^void(BOOL success) {
+				NSLog(@"Completions block: %i", success);
+			};
+			if (@available(iOS 13.0, *)) {
+				UISceneOpenExternalURLOptions * options = [[UISceneOpenExternalURLOptions alloc] init];
+				options.universalLinksOnly = false;
+
+				[invocation setTarget: responder];
+				[invocation setSelector: selector];
+				[invocation setArgument: &url atIndex: 2];
+				[invocation setArgument: &options atIndex:3];
+				[invocation setArgument: &completion atIndex: 4];
+				[invocation invoke];
+				break;
+			} else {
+				NSDictionary<NSString *, id> *options = [NSDictionary dictionary];
+
+				[invocation setTarget: responder];
+				[invocation setSelector: selector];
+				[invocation setArgument: &url atIndex: 2];
+				[invocation setArgument: &options atIndex:3];
+				[invocation setArgument: &completion atIndex: 4];
+				[invocation invoke];
+				break;
+			}
+		}
+	}
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-    if( [(NSString*)self.contentText length] == 0 ) {
-        [super viewWillAppear:animated];
-    }
-    else {
-        [self.view endEditing:YES];
-        [self didSelectPost];
-    }
+- (void) viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+	self.view.hidden = YES;
+	[self didSelectPost];
+}
+
+- (void) sendItemForIdentifier:(NSString*) utiToLoad itemProvider:(NSItemProvider*) itemProvider items:(NSMutableArray*) items totalCount:(NSUInteger) totalCount {
+	[self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
+
+	if ([itemProvider.registeredTypeIdentifiers count] > 0) {
+		utiToLoad = itemProvider.registeredTypeIdentifiers[0];
+	}
+
+	[itemProvider loadItemForTypeIdentifier:utiToLoad options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
+
+		NSString *webURL = @"";
+		NSString *fileName = @"";
+		NSString *filePath = @"";
+		NSData *data = [[NSData alloc] init];
+		if([(NSObject*)item isKindOfClass:[NSURL class]]) {
+			if ([[(NSURL*)item scheme] isEqualToString:@"http"] || [[(NSURL*)item scheme] isEqualToString:@"https"]) {
+				webURL = [(NSURL*)item absoluteString];
+			}
+			else {
+				data = [NSData dataWithContentsOfURL:(NSURL*)item];
+				fileName = [(NSURL*)item lastPathComponent];
+				filePath = [(NSURL*)item absoluteString];
+			}
+		}
+		else if([(NSObject*)item isKindOfClass:[NSData class]]) {
+			data = [NSData dataWithData:(NSData *)item];
+		}
+		if([(NSObject*)item isKindOfClass:[UIImage class]]) {
+			data = UIImagePNGRepresentation((UIImage*)item);
+		}
+
+		NSString *suggestedName = fileName;
+		if ([itemProvider respondsToSelector:NSSelectorFromString(@"getSuggestedName")]) {
+			suggestedName = [itemProvider valueForKey:@"suggestedName"];
+		}
+
+		NSString *uti = @"";
+		NSArray<NSString *> *utis = [NSArray new];
+		if ([itemProvider.registeredTypeIdentifiers count] > 0) {
+			uti = itemProvider.registeredTypeIdentifiers[0];
+			utis = itemProvider.registeredTypeIdentifiers;
+		}
+		else {
+			uti = utiToLoad;
+		}
+		NSDictionary *dict = @{
+			@"text": @"",
+			@"backURL": self.backURL,
+			@"data" : data,
+			@"uti": uti,
+			@"utis": utis,
+			@"name": suggestedName,
+			@"url": webURL,
+			@"path": filePath
+		};
+		[items addObject:dict];
+
+		if (totalCount == [items count]) {
+			[self sendItems:items];
+		}
+	}];
 }
 
 - (void) didSelectPost {
 
-    [self setup];
-    [self debug:@"[didSelectPost]"];
+	[self setup];
+	[self debug:@"[didSelectPost]"];
 
-    // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
-    for (NSItemProvider* itemProvider in ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments) {
-        
-        if ([itemProvider hasItemConformingToTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER]) {
-            [self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
+	// This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
+	NSMutableArray* items = [[NSMutableArray alloc] init];
+	NSArray* attachments = ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments;
+	NSMutableArray* itemProviders = [[NSMutableArray alloc] init];
 
-            NSString *utiToLoad = SHAREEXT_UNIFORM_TYPE_IDENTIFIER;
-            if ([itemProvider.registeredTypeIdentifiers count] > 0) {
-                utiToLoad = itemProvider.registeredTypeIdentifiers[0];
-            }
+	// filter specific types
+	for (NSItemProvider* itemProvider in attachments) {
+		if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"] || [itemProvider hasItemConformingToTypeIdentifier:@"com.adobe.pdf"]) {
+			[itemProviders addObject:itemProvider];
+		}
+	}
 
-            [itemProvider loadItemForTypeIdentifier:utiToLoad options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
+	for (NSItemProvider* itemProvider in itemProviders) {
+		if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
+			[self sendItemForIdentifier:@"public.image" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
+		} else if ([itemProvider hasItemConformingToTypeIdentifier:@"com.adobe.pdf"]) {
+			[self sendItemForIdentifier:@"com.adobe.pdf" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
+		}
+	}
+}
 
-                NSString *contentText = self.contentText;
-                NSString *webURL = @"";
-                NSString *fileName = @"";
-                NSString *filePath = @"";
-                NSData *data = [[NSData alloc] init];
-                if([(NSObject*)item isKindOfClass:[NSURL class]]) {
-                    if ([[(NSURL*)item scheme] isEqualToString:@"http"] || [[(NSURL*)item scheme] isEqualToString:@"https"]) {
-                        webURL = [(NSURL*)item absoluteString];
-                    }
-                    else {
-                        data = [NSData dataWithContentsOfURL:(NSURL*)item];
-                        fileName = [(NSURL*)item lastPathComponent];
-                        filePath = [(NSURL*)item absoluteString];
-                    }
-                }
-                else if([(NSObject*)item isKindOfClass:[NSData class]]) {
-                    data = [NSData dataWithData:(NSData *)item];
-                }
-                else if([(NSObject*)item isKindOfClass:[NSString class]]) {
-                    contentText = (NSString*)item;
-                }
-                if([(NSObject*)item isKindOfClass:[UIImage class]]) {
-                    data = UIImagePNGRepresentation((UIImage*)item);
-                }
+- (void) sendItems:(NSArray*) items {
+	[self.userDefaults setObject:items forKey:@"items"];
+	[self.userDefaults synchronize];
 
-                NSString *suggestedName = fileName;
-                if ([itemProvider respondsToSelector:NSSelectorFromString(@"getSuggestedName")]) {
-                    suggestedName = [itemProvider valueForKey:@"suggestedName"];
-                }
+	// Emit a URL that opens the cordova app
+	NSString *url = [NSString stringWithFormat:@"%@://items", SHAREEXT_URL_SCHEME];
 
-                NSString *uti = @"";
-                NSArray<NSString *> *utis = [NSArray new];
-                if ([itemProvider.registeredTypeIdentifiers count] > 0) {
-                    uti = itemProvider.registeredTypeIdentifiers[0];
-                    utis = itemProvider.registeredTypeIdentifiers;
-                }
-                else {
-                    uti = SHAREEXT_UNIFORM_TYPE_IDENTIFIER;
-                }
-                NSDictionary *dict = @{
-                    @"text": contentText,
-                    @"backURL": self.backURL,
-                    @"data" : data,
-                    @"uti": uti,
-                    @"utis": utis,
-                    @"name": suggestedName,
-                    @"url": webURL,
-                    @"path": filePath
-                };
-                [self.userDefaults setObject:dict forKey:@"items"];
-                [self.userDefaults synchronize];
+	// Not allowed:
+	// [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
 
-                // Emit a URL that opens the cordova app
-                NSString *url = [NSString stringWithFormat:@"%@://items", SHAREEXT_URL_SCHEME];
+	// Crashes:
+	// [self.extensionContext openURL:[NSURL URLWithString:url] completionHandler:nil];
 
-                // Not allowed:
-                // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
-                
-                // Crashes:
-                // [self.extensionContext openURL:[NSURL URLWithString:url] completionHandler:nil];
-                
-                // From https://stackoverflow.com/a/25750229/2343390
-                // Reported not to work since iOS 8.3
-                // NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
-                // [self.webView loadRequest:request];
-                
-                [self openURL:[NSURL URLWithString:url]];
+	// From https://stackoverflow.com/a/25750229/2343390
+	// Reported not to work since iOS 8.3
+	// NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
+	// [self.webView loadRequest:request];
 
-                // Inform the host that we're done, so it un-blocks its UI.
-                [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
-            }];
+	[self openURL:[NSURL URLWithString:url]];
 
-            return;
-        }
-    }
-
-    // Inform the host that we're done, so it un-blocks its UI.
-    [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+	// Inform the host that we're done, so it un-blocks its UI.
+	[self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
 }
 
 - (NSArray*) configurationItems {
-    // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
-    return @[];
+	// To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
+	return @[];
 }
 
 - (NSString*) backURLFromBundleID: (NSString*)bundleId {
-    if (bundleId == nil) return nil;
-    // App Store - com.apple.AppStore
-    if ([bundleId isEqualToString:@"com.apple.AppStore"]) return @"itms-apps://";
-    // Calculator - com.apple.calculator
-    // Calendar - com.apple.mobilecal
-    // Camera - com.apple.camera
-    // Clock - com.apple.mobiletimer
-    // Compass - com.apple.compass
-    // Contacts - com.apple.MobileAddressBook
-    // FaceTime - com.apple.facetime
-    // Find Friends - com.apple.mobileme.fmf1
-    // Find iPhone - com.apple.mobileme.fmip1
-    // Game Center - com.apple.gamecenter
-    // Health - com.apple.Health
-    // iBooks - com.apple.iBooks
-    // iTunes Store - com.apple.MobileStore
-    // Mail - com.apple.mobilemail - message://
-    if ([bundleId isEqualToString:@"com.apple.mobilemail"]) return @"message://";
-    // Maps - com.apple.Maps - maps://
-    if ([bundleId isEqualToString:@"com.apple.Maps"]) return @"maps://";
-    // Messages - com.apple.MobileSMS
-    // Music - com.apple.Music
-    // News - com.apple.news - applenews://
-    if ([bundleId isEqualToString:@"com.apple.news"]) return @"applenews://";
-    // Notes - com.apple.mobilenotes - mobilenotes://
-    if ([bundleId isEqualToString:@"com.apple.mobilenotes"]) return @"mobilenotes://";
-    // Phone - com.apple.mobilephone
-    // Photos - com.apple.mobileslideshow
-    if ([bundleId isEqualToString:@"com.apple.mobileslideshow"]) return @"photos-redirect://";
-    // Podcasts - com.apple.podcasts
-    // Reminders - com.apple.reminders - x-apple-reminder://
-    if ([bundleId isEqualToString:@"com.apple.reminders"]) return @"x-apple-reminder://";
-    // Safari - com.apple.mobilesafari
-    // Settings - com.apple.Preferences
-    // Stocks - com.apple.stocks
-    // Tips - com.apple.tips
-    // Videos - com.apple.videos - videos://
-    if ([bundleId isEqualToString:@"com.apple.videos"]) return @"videos://";
-    // Voice Memos - com.apple.VoiceMemos - voicememos://
-    if ([bundleId isEqualToString:@"com.apple.VoiceMemos"]) return @"voicememos://";
-    // Wallet - com.apple.Passbook
-    // Watch - com.apple.Bridge
-    // Weather - com.apple.weather
-    return @"";
+	if (bundleId == nil) return nil;
+	// App Store - com.apple.AppStore
+	if ([bundleId isEqualToString:@"com.apple.AppStore"]) return @"itms-apps://";
+	// Calculator - com.apple.calculator
+	// Calendar - com.apple.mobilecal
+	// Camera - com.apple.camera
+	// Clock - com.apple.mobiletimer
+	// Compass - com.apple.compass
+	// Contacts - com.apple.MobileAddressBook
+	// FaceTime - com.apple.facetime
+	// Find Friends - com.apple.mobileme.fmf1
+	// Find iPhone - com.apple.mobileme.fmip1
+	// Game Center - com.apple.gamecenter
+	// Health - com.apple.Health
+	// iBooks - com.apple.iBooks
+	// iTunes Store - com.apple.MobileStore
+	// Mail - com.apple.mobilemail - message://
+	if ([bundleId isEqualToString:@"com.apple.mobilemail"]) return @"message://";
+	// Maps - com.apple.Maps - maps://
+	if ([bundleId isEqualToString:@"com.apple.Maps"]) return @"maps://";
+	// Messages - com.apple.MobileSMS
+	// Music - com.apple.Music
+	// News - com.apple.news - applenews://
+	if ([bundleId isEqualToString:@"com.apple.news"]) return @"applenews://";
+	// Notes - com.apple.mobilenotes - mobilenotes://
+	if ([bundleId isEqualToString:@"com.apple.mobilenotes"]) return @"mobilenotes://";
+	// Phone - com.apple.mobilephone
+	// Photos - com.apple.mobileslideshow
+	if ([bundleId isEqualToString:@"com.apple.mobileslideshow"]) return @"photos-redirect://";
+	// Podcasts - com.apple.podcasts
+	// Reminders - com.apple.reminders - x-apple-reminder://
+	if ([bundleId isEqualToString:@"com.apple.reminders"]) return @"x-apple-reminder://";
+	// Safari - com.apple.mobilesafari
+	// Settings - com.apple.Preferences
+	// Stocks - com.apple.stocks
+	// Tips - com.apple.tips
+	// Videos - com.apple.videos - videos://
+	if ([bundleId isEqualToString:@"com.apple.videos"]) return @"videos://";
+	// Voice Memos - com.apple.VoiceMemos - voicememos://
+	if ([bundleId isEqualToString:@"com.apple.VoiceMemos"]) return @"voicememos://";
+	// Wallet - com.apple.Passbook
+	// Watch - com.apple.Bridge
+	// Weather - com.apple.weather
+	return @"";
 }
 
 // This is called at the point where the Post dialog is about to be shown.
 // We use it to store the _hostBundleID
 - (void) willMoveToParentViewController: (UIViewController*)parent {
-    NSString *hostBundleID = [parent valueForKey:(@"_hostBundleID")];
-    self.backURL = [self backURLFromBundleID:hostBundleID];
+	NSString *hostBundleID = [parent valueForKey:(@"_hostBundleID")];
+	self.backURL = [self backURLFromBundleID:hostBundleID];
 }
 
 @end
+
+
