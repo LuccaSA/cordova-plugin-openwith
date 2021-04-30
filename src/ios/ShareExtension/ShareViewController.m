@@ -118,9 +118,9 @@
 }
 
 - (void) viewWillAppear:(BOOL)animated {
-  [self didSelectPost];
-  [super viewWillDisappear:animated];
-  self.view.hidden = YES;
+	[super viewWillAppear:animated];
+	self.view.hidden = YES;
+	[self didSelectPost];
 }
 
 - (void) sendItemForIdentifier:(NSString*) utiToLoad itemProvider:(NSItemProvider*) itemProvider items:(NSMutableArray*) items totalCount:(NSUInteger) totalCount {
@@ -194,14 +194,14 @@
 	NSMutableArray* items = [[NSMutableArray alloc] init];
 	NSArray* attachments = ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments;
 	NSMutableArray* itemProviders = [[NSMutableArray alloc] init];
-	
+
 	// filter specific types
 	for (NSItemProvider* itemProvider in attachments) {
 		if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"] || [itemProvider hasItemConformingToTypeIdentifier:@"com.adobe.pdf"]) {
 			[itemProviders addObject:itemProvider];
 		}
 	}
-	
+
 	for (NSItemProvider* itemProvider in itemProviders) {
 		if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
 			[self sendItemForIdentifier:@"public.image" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
