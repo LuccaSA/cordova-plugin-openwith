@@ -29,17 +29,13 @@
 // THE SOFTWARE.
 //
 
-const PLUGIN_ID = 'cc.fovea.cordova.openwith';
+const { PLUGIN_ID, redError } = require("./utils");
 const BUNDLE_SUFFIX = '.shareextension';
 
 var fs = require('fs');
 var path = require('path');
 var packageJson;
 var bundleIdentifier;
-
-function redError(message) {
-    return new Error('"' + PLUGIN_ID + '" \x1b[1m\x1b[31m' + message + '\x1b[0m');
-}
 
 function replacePreferencesInFile(filePath, preferences) {
     var content = fs.readFileSync(filePath, 'utf8');
@@ -138,7 +134,7 @@ function getCordovaParameter(configXml, variableName) {
 function getBundleId(context, configXml) {
   var elementTree = require('elementtree');
   var etree = elementTree.parse(configXml);
-  return etree.getroot().get('id');
+  return etree.getroot().get('ios-CFBundleIdentifier');
 }
 
 function parsePbxProject(context, pbxProjectPath) {
@@ -206,9 +202,6 @@ function getPreferences(context, configXml, projectName) {
   }, {
     key: '__URL_SCHEME__',
     value: getCordovaParameter(configXml, 'IOS_URL_SCHEME')
-  }, {
-    key: '__UNIFORM_TYPE_IDENTIFIER__',
-    value: getCordovaParameter(configXml, 'IOS_UNIFORM_TYPE_IDENTIFIER')
   }];
 }
 
