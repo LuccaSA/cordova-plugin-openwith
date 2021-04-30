@@ -202,9 +202,6 @@ function getPreferences(context, configXml, projectName) {
   }, {
     key: '__URL_SCHEME__',
     value: getCordovaParameter(configXml, 'IOS_URL_SCHEME')
-  }, {
-    key: '__UNIFORM_TYPE_IDENTIFIER__',
-    value: getCordovaParameter(configXml, 'IOS_UNIFORM_TYPE_IDENTIFIER')
   }];
 }
 
