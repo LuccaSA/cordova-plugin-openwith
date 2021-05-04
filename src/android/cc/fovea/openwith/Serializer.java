@@ -9,9 +9,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Base64;
+
 import java.io.IOException;
 import java.io.InputStream;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,8 +22,9 @@ import org.json.JSONObject;
  */
 class Serializer {
 
-    /** Convert an intent to JSON.
-     *
+    /**
+     * Convert an intent to JSON.
+     * <p>
      * This actually only exports stuff necessary to see file content
      * (streams or clip data) sent with the intent.
      * If none are specified, null is return.
@@ -46,7 +48,7 @@ class Serializer {
             if (items == null) {
                 items = textItems;
             } else {
-                for (int i=0; i<textItems.length(); i++) {
+                for (int i = 0; i < textItems.length(); i++) {
                     items.put(textItems.get(i));
                 }
             }
@@ -63,7 +65,7 @@ class Serializer {
 
     public static String translateAction(final String action) {
         if ("android.intent.action.SEND".equals(action) ||
-            "android.intent.action.SEND_MULTIPLE".equals(action)) {
+                "android.intent.action.SEND_MULTIPLE".equals(action)) {
             return "SEND";
         } else if ("android.intent.action.VIEW".equals(action)) {
             return "VIEW";
@@ -71,9 +73,11 @@ class Serializer {
         return action;
     }
 
-    /** Read the value of "exit_on_sent" in the intent's extra.
-     *
-     * Defaults to false. */
+    /**
+     * Read the value of "exit_on_sent" in the intent's extra.
+     * <p>
+     * Defaults to false.
+     */
     public static boolean readExitOnSent(final Bundle extras) {
         if (extras == null) {
             return false;
@@ -81,9 +85,11 @@ class Serializer {
         return extras.getBoolean("exit_on_sent", false);
     }
 
-    /** Extract the list of items from clip data (if available).
-     *
-     * Defaults to null. */
+    /**
+     * Extract the list of items from clip data (if available).
+     * <p>
+     * Defaults to null.
+     */
     public static JSONArray itemsFromClipData(
             final ContentResolver contentResolver,
             final ClipData clipData)
@@ -102,9 +108,11 @@ class Serializer {
         return null;
     }
 
-    /** Extract the list of items from the intent's extra stream.
-     *
-     * See Intent.EXTRA_STREAM for details. */
+    /**
+     * Extract the list of items from the intent's extra stream.
+     * <p>
+     * See Intent.EXTRA_STREAM for details.
+     */
     public static JSONArray itemsFromExtras(
             final ContentResolver contentResolver,
             final Bundle extras)
@@ -145,9 +153,11 @@ class Serializer {
         return null;
     }
 
-    /** Extract the list of items from the intent's getData
-     *
-     * See Intent.ACTION_VIEW for details. */
+    /**
+     * Extract the list of items from the intent's getData
+     * <p>
+     * See Intent.ACTION_VIEW for details.
+     */
     public static JSONArray itemsFromData(
             final ContentResolver contentResolver,
             final Uri uri)
@@ -166,13 +176,14 @@ class Serializer {
         return new JSONArray(items);
     }
 
-    /** Convert an Uri to JSON object.
-     *
+    /**
+     * Convert an Uri to JSON object.
+     * <p>
      * Object will include:
-     *    "type" of data;
-     *    "uri" itself;
-     *    "path" to the file, if applicable.
-     *    "data" for the file.
+     * "type" of data;
+     * "uri" itself;
+     * "path" to the file, if applicable.
+     * "data" for the file.
      */
     public static JSONObject toJSONObject(
             final ContentResolver contentResolver,
@@ -189,40 +200,44 @@ class Serializer {
         return json;
     }
 
-    /** Return data contained at a given Uri as Base64. Defaults to null. */
+    /**
+     * Return data contained at a given Uri as Base64. Defaults to null.
+     */
     public static String getDataFromURI(
             final ContentResolver contentResolver,
             final Uri uri) {
         try {
             final InputStream inputStream = contentResolver.openInputStream(uri);
-            final byte[] bytes = ByteStreams.toByteArray(inputStream);
-            return Base64.encodeToString(bytes, Base64.NO_WRAP);
-        }
-        catch (IOException e) {
+            return ByteStreams.toBase64(inputStream);
+        } catch (IOException e) {
+            return "";
+        } catch (OutOfMemoryError e) {
             return "";
         }
     }
 
-	/** Convert the Uri to the direct file system path of the image file.
-     *
-     * source: https://stackoverflow.com/questions/20067508/get-real-path-from-uri-android-kitkat-new-storage-access-framework/20402190?noredirect=1#comment30507493_20402190 */
-	public static String getRealPathFromURI(
+    /**
+     * Convert the Uri to the direct file system path of the image file.
+     * <p>
+     * source: https://stackoverflow.com/questions/20067508/get-real-path-from-uri-android-kitkat-new-storage-access-framework/20402190?noredirect=1#comment30507493_20402190
+     */
+    public static String getRealPathFromURI(
             final ContentResolver contentResolver,
             final Uri uri) {
-		final String[] proj = { MediaStore.Images.Media.DATA };
-		final Cursor cursor = contentResolver.query(uri, proj, null, null, null);
-		if (cursor == null) {
-			return "";
-		}
-		final int column_index = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
-		if (column_index < 0) {
-			cursor.close();
-			return "";
-		}
-		cursor.moveToFirst();
-		final String result = cursor.getString(column_index);
-		cursor.close();
-		return result;
-	}
+        final String[] proj = {MediaStore.Images.Media.DATA};
+        final Cursor cursor = contentResolver.query(uri, proj, null, null, null);
+        if (cursor == null) {
+            return "";
+        }
+        final int column_index = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+        if (column_index < 0) {
+            cursor.close();
+            return "";
+        }
+        cursor.moveToFirst();
+        final String result = cursor.getString(column_index);
+        cursor.close();
+        return result;
+    }
 }
 // vim: ts=4:sw=4:et
