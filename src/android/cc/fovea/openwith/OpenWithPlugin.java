@@ -4,8 +4,10 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+
 import java.util.Arrays;
 import java.util.ArrayList;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
@@ -14,34 +16,56 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
-* This is the entry point of the openwith plugin
-*
-* @author Jean-Christophe Hoelt
-*/
+ * This is the entry point of the openwith plugin
+ *
+ * @author Jean-Christophe Hoelt
+ */
 public class OpenWithPlugin extends CordovaPlugin {
 
-    /** How the plugin name shows in logs */
+    /**
+     * How the plugin name shows in logs
+     */
     private final String PLUGIN_NAME = "OpenWithPlugin";
 
-    /** Maximal verbosity, log everything */
+    /**
+     * Maximal verbosity, log everything
+     */
     private final int DEBUG = 0;
-    /** Default verbosity, log interesting stuff only */
+    /**
+     * Default verbosity, log interesting stuff only
+     */
     private final int INFO = 10;
-    /** Low verbosity, log only warnings and errors  */
+    /**
+     * Low verbosity, log only warnings and errors
+     */
     private final int WARN = 20;
-    /** Minimal verbosity, log only errors */
+    /**
+     * Minimal verbosity, log only errors
+     */
     private final int ERROR = 30;
 
-    /** Current verbosity level, changed with setVerbosity */
+    /**
+     * Current verbosity level, changed with setVerbosity
+     */
     private int verbosity = INFO;
 
-    /** Log to the console if verbosity level is greater or equal to level */
+    /**
+     * Log to the console if verbosity level is greater or equal to level
+     */
     private void log(final int level, final String message) {
-        switch(level) {
-            case DEBUG: Log.d(PLUGIN_NAME, message); break;
-            case INFO: Log.i(PLUGIN_NAME, message); break;
-            case WARN: Log.w(PLUGIN_NAME, message); break;
-            case ERROR: Log.e(PLUGIN_NAME, message); break;
+        switch (level) {
+            case DEBUG:
+                Log.d(PLUGIN_NAME, message);
+                break;
+            case INFO:
+                Log.i(PLUGIN_NAME, message);
+                break;
+            case WARN:
+                Log.w(PLUGIN_NAME, message);
+                break;
+            case ERROR:
+                Log.e(PLUGIN_NAME, message);
+                break;
         }
         if (level >= verbosity && loggerContext != null) {
             final PluginResult result = new PluginResult(
@@ -52,20 +76,26 @@ public class OpenWithPlugin extends CordovaPlugin {
         }
     }
 
-    /** Callback to the javascript onNewFile method */
+    /**
+     * Callback to the javascript onNewFile method
+     */
     private CallbackContext handlerContext;
 
-    /** Callback to the javascript logger method */
+    /**
+     * Callback to the javascript logger method
+     */
     private CallbackContext loggerContext;
 
-    /** Intents added before the handler has been registered */
+    /**
+     * Intents added before the handler has been registered
+     */
     private ArrayList pendingIntents = new ArrayList(); //NOPMD
 
     /**
      * Called when the WebView does a top-level navigation or refreshes.
-     *
+     * <p>
      * Plugins should stop any long-running processes and clean up internal state.
-     *
+     * <p>
      * Does nothing by default.
      */
     @Override
@@ -89,20 +119,15 @@ public class OpenWithPlugin extends CordovaPlugin {
         log(DEBUG, "execute() called with action:" + action + " and options: " + data);
         if ("setVerbosity".equals(action)) {
             return setVerbosity(data, callbackContext);
-        }
-        else if ("init".equals(action)) {
+        } else if ("init".equals(action)) {
             return init(data, callbackContext);
-        }
-        else if ("setHandler".equals(action)) {
+        } else if ("setHandler".equals(action)) {
             return setHandler(data, callbackContext);
-        }
-        else if ("setLogger".equals(action)) {
+        } else if ("setLogger".equals(action)) {
             return setLogger(data, callbackContext);
-        }
-        else if ("load".equals(action)) {
+        } else if ("load".equals(action)) {
             return load(data, callbackContext);
-        }
-        else if ("exit".equals(action)) {
+        } else if ("exit".equals(action)) {
             return exit(data, callbackContext);
         }
         log(DEBUG, "execute() did not recognize this action: " + action);
@@ -119,8 +144,7 @@ public class OpenWithPlugin extends CordovaPlugin {
             verbosity = data.getInt(0);
             log(DEBUG, "setVerbosity() -> ok");
             return PluginResultSender.ok(context);
-        }
-        catch (JSONException ex) {
+        } catch (JSONException ex) {
             log(WARN, "setVerbosity() -> invalidAction");
             return false;
         }
@@ -179,7 +203,7 @@ public class OpenWithPlugin extends CordovaPlugin {
             return false;
         }
         final ContentResolver contentResolver = this.cordova
-            .getActivity().getApplicationContext().getContentResolver();
+                .getActivity().getApplicationContext().getContentResolver();
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
                 try {
@@ -189,8 +213,7 @@ public class OpenWithPlugin extends CordovaPlugin {
                     final PluginResult result = new PluginResult(PluginResult.Status.OK, data);
                     context.sendPluginResult(result);
                     log(DEBUG, "load() " + uri + " -> ok");
-                }
-                catch (JSONException e) {
+                } catch (JSONException e) {
                     final PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.getMessage());
                     context.sendPluginResult(result);
                     log(DEBUG, "load() -> json error");
@@ -202,7 +225,7 @@ public class OpenWithPlugin extends CordovaPlugin {
 
     /**
      * This is called when a new intent is sent while the app is already opened.
-     *
+     * <p>
      * We also call it manually with the cordova application intent when the plugin
      * is initialized (so all intents will be managed by this method).
      */
@@ -230,7 +253,9 @@ public class OpenWithPlugin extends CordovaPlugin {
         pendingIntents.clear();
     }
 
-    /** Calls the javascript intent handlers. */
+    /**
+     * Calls the javascript intent handlers.
+     */
     private void sendIntentToJavascript(final JSONObject intent) {
         final PluginResult result = new PluginResult(PluginResult.Status.OK, intent);
         result.setKeepCallback(true);
@@ -243,7 +268,7 @@ public class OpenWithPlugin extends CordovaPlugin {
     private JSONObject toJSONObject(final Intent intent) {
         try {
             final ContentResolver contentResolver = this.cordova
-                .getActivity().getApplicationContext().getContentResolver();
+                    .getActivity().getApplicationContext().getContentResolver();
             return Serializer.toJSONObject(contentResolver, intent);
         } catch (JSONException e) {
             log(ERROR, "Error converting intent to JSON: " + e.getMessage());

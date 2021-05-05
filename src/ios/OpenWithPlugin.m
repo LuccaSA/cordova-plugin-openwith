@@ -256,23 +256,27 @@ static NSDictionary* launchOptions = nil;
 		return;
 	}
 
+	NSMutableArray* items = [[NSMutableArray alloc] init];
 	[self.userDefaults synchronize];
 	NSArray *object = [self.userDefaults objectForKey:@"items"];
 	if (object == nil) {
 		[self debug:@"[checkForFileToShare] Nothing to share"];
-		return;
+		return [self sendResults:items];
 	}
 	
-	NSMutableArray* items = [[NSMutableArray alloc] init];
 	for (NSDictionary* item in object) {
 		NSDictionary* cordovaItem = [self mapToCordova:item];
 		if (cordovaItem != nil) {
 			[items addObject:cordovaItem];
 		}
 	}
+	[self sendResults:items];
+}
 
+- (void) sendResults:(NSMutableArray*) items {
 	// Clean-up the object, assume it's been handled from now, prevent double processing
 	[self.userDefaults removeObjectForKey:@"items"];
+	[self.userDefaults synchronize];
 	
 	CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{
 		@"action": @"SEND",
