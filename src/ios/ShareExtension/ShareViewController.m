@@ -141,7 +141,11 @@
 				webURL = [(NSURL*)item absoluteString];
 			}
 			else {
-				data = [NSData dataWithContentsOfURL:(NSURL*)item];
+				NSData *tempData = [NSData dataWithContentsOfURL:(NSURL*)item];
+				if (tempData.length <= 10485760) {
+					// Max size is 100MB
+					data = tempData;
+				}
 				fileName = [(NSURL*)item lastPathComponent];
 				filePath = [(NSURL*)item absoluteString];
 			}
