@@ -259,7 +259,7 @@ static NSDictionary* launchOptions = nil;
 	NSArray *object = [self.userDefaults objectForKey:@"items"];
 	if (object == nil) {
 		[self debug:@"[checkForFileToShare] Nothing to share"];
-		return [self sendResults:items];
+		return;
 	}
 	
 	for (NSDictionary* item in object) {
