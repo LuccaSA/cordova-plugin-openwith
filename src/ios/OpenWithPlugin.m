@@ -173,7 +173,6 @@ static NSDictionary* launchOptions = nil;
 									  andClass:[NSNumber class]];
 	self.verbosityLevel = value.integerValue;
 	[self.userDefaults setInteger:self.verbosityLevel forKey:@"verbosityLevel"];
-	[self.userDefaults synchronize];
 	[self debug:[NSString stringWithFormat:@"[setVerbosity] %d", self.verbosityLevel]];
 	CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
 	[self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -257,7 +256,6 @@ static NSDictionary* launchOptions = nil;
 	}
 
 	NSMutableArray* items = [[NSMutableArray alloc] init];
-	[self.userDefaults synchronize];
 	NSArray *object = [self.userDefaults objectForKey:@"items"];
 	if (object == nil) {
 		[self debug:@"[checkForFileToShare] Nothing to share"];
