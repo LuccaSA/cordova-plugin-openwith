@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.text.TextUtils;
 
 import java.io.IOException;
@@ -207,6 +208,15 @@ class Serializer {
             final ContentResolver contentResolver,
             final Uri uri) {
         try {
+            Cursor c = contentResolver.query(uri, null, null, null, null);
+            int sizeIndex = c.getColumnIndex(OpenableColumns.SIZE);
+            c.moveToFirst();
+            long fileSize = c.getLong(sizeIndex);
+
+            if (fileSize > 20971520) {
+                return "";
+            }
+
             final InputStream inputStream = contentResolver.openInputStream(uri);
             return ByteStreams.toBase64(inputStream);
         } catch (IOException e) {

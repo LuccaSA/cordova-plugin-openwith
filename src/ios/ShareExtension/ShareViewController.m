@@ -143,7 +143,7 @@
 			else {
 				NSData *tempData = [NSData dataWithContentsOfURL:(NSURL*)item];
 				if (tempData.length <= 10485760) {
-					// Max size is 100MB
+					// Max size is 10MB
 					data = tempData;
 				}
 				fileName = [(NSURL*)item lastPathComponent];
@@ -217,7 +217,6 @@
 
 - (void) sendItems:(NSArray*) items {
 	[self.userDefaults setObject:items forKey:@"items"];
-	[self.userDefaults synchronize];
 
 	// Emit a URL that opens the cordova app
 	NSString *url = [NSString stringWithFormat:@"%@://items", SHAREEXT_URL_SCHEME];

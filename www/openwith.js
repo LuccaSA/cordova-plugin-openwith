@@ -170,7 +170,7 @@ function initOpenwithPlugin(root) {
         errorCallback(err, dataDescriptor);
       }
     };
-    if (dataDescriptor.base64) {
+    if (dataDescriptor.base64 !== null && typeof dataDescriptor.base64 !== 'undefined') {
       loadSuccess(dataDescriptor.base64);
     } else {
       cordova.exec(loadSuccess, loadError, PLUGIN_NAME, "load", [

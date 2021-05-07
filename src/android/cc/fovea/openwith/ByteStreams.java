@@ -3,6 +3,7 @@ package cc.fovea.openwith;
 import android.util.Base64;
 import android.util.Base64OutputStream;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,16 +19,26 @@ public final class ByteStreams {
     }
 
     public static String toBase64(final InputStream in) throws IOException, OutOfMemoryError {
-        byte[] buffer = new byte[8192];
-        int bytesRead;
-        ByteArrayOutputStream output = new ByteArrayOutputStream(Math.max(32, in.available()));
+        byte[] buffer = new byte[3 * 1024];
+        int len = 0;
+
+        final BufferedInputStream bufferedInputStream = new BufferedInputStream(in);
+        ByteArrayOutputStream output = new ByteArrayOutputStream(Math.max(32, bufferedInputStream.available()));
         Base64OutputStream output64 = new Base64OutputStream(output, Base64.NO_WRAP);
-        while ((bytesRead = in.read(buffer)) != -1) {
-            output64.write(buffer, 0, bytesRead);
+
+        while ((len = bufferedInputStream.read(buffer)) >= 0) {
+            output64.write(buffer, 0, len);
         }
 
+        output64.flush();
         output64.close();
-        return output.toString();
+
+        String result = new String(output.toByteArray(), "UTF-8");
+
+        output.close();
+        bufferedInputStream.close();
+
+        return result;
     }
 }
 // vim: ts=4:sw=4:et
