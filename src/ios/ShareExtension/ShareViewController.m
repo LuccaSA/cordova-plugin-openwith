@@ -143,7 +143,7 @@
 			else {
 				NSData *tempData = [NSData dataWithContentsOfURL:(NSURL*)item];
 				if (tempData.length <= 10485760) {
-					// Max size is 100MB
+					// Max size is 10MB
 					data = tempData;
 				}
 				fileName = [(NSURL*)item lastPathComponent];
