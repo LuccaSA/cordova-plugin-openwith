@@ -201,7 +201,7 @@
 
 	// filter specific types
 	for (NSItemProvider* itemProvider in attachments) {
-		if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"] || [itemProvider hasItemConformingToTypeIdentifier:@"com.adobe.pdf"] || [itemProvider hasItemConformingToTypeIdentifier:@"public.file-url"]) {
+		if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"] || [itemProvider hasItemConformingToTypeIdentifier:@"com.adobe.pdf"]) {
 			[itemProviders addObject:itemProvider];
 		}
 	}
@@ -209,10 +209,12 @@
 	for (NSItemProvider* itemProvider in itemProviders) {
 		if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
 			[self sendItemForIdentifier:@"public.image" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
-		} else if ([itemProvider hasItemConformingToTypeIdentifier:@"public.file-url"]) {
-			[self sendItemForIdentifier:@"public.file-url" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
 		} else if ([itemProvider hasItemConformingToTypeIdentifier:@"com.adobe.pdf"]) {
-			[self sendItemForIdentifier:@"com.adobe.pdf" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
+			 if ([itemProvider hasItemConformingToTypeIdentifier:@"public.file-url"]) {
+				[self sendItemForIdentifier:@"public.file-url" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
+			} else {
+				[self sendItemForIdentifier:@"com.adobe.pdf" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
+			}
 		}
 	}
 }
