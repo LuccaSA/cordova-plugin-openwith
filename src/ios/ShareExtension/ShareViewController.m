@@ -126,10 +126,6 @@
 - (void) sendItemForIdentifier:(NSString*) utiToLoad itemProvider:(NSItemProvider*) itemProvider items:(NSMutableArray*) items totalCount:(NSUInteger) totalCount {
 	[self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
 
-	if ([itemProvider.registeredTypeIdentifiers count] > 0) {
-		utiToLoad = itemProvider.registeredTypeIdentifiers[0];
-	}
-
 	[itemProvider loadItemForTypeIdentifier:utiToLoad options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
 
 		NSString *webURL = @"";
