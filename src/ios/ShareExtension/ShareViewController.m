@@ -91,7 +91,7 @@
 			void (^completion)(BOOL success) = ^void(BOOL success) {
 				NSLog(@"Completions block: %i", success);
 			};
-			if (@available(iOS 13.0, *)) {
+			if (@available(iOS 13, *)) {
 				UISceneOpenExternalURLOptions * options = [[UISceneOpenExternalURLOptions alloc] init];
 				options.universalLinksOnly = false;
 
@@ -125,10 +125,6 @@
 
 - (void) sendItemForIdentifier:(NSString*) utiToLoad itemProvider:(NSItemProvider*) itemProvider items:(NSMutableArray*) items totalCount:(NSUInteger) totalCount {
 	[self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
-
-	if ([itemProvider.registeredTypeIdentifiers count] > 0) {
-		utiToLoad = itemProvider.registeredTypeIdentifiers[0];
-	}
 
 	[itemProvider loadItemForTypeIdentifier:utiToLoad options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
 
@@ -210,7 +206,11 @@
 		if ([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
 			[self sendItemForIdentifier:@"public.image" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
 		} else if ([itemProvider hasItemConformingToTypeIdentifier:@"com.adobe.pdf"]) {
-			[self sendItemForIdentifier:@"com.adobe.pdf" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
+			 if ([itemProvider hasItemConformingToTypeIdentifier:@"public.file-url"]) {
+				[self sendItemForIdentifier:@"public.file-url" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
+			} else {
+				[self sendItemForIdentifier:@"com.adobe.pdf" itemProvider:itemProvider items:items totalCount:[itemProviders count]];
+			}
 		}
 	}
 }
