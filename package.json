@@ -41,7 +41,6 @@
   "homepage": "https://github.com/j3k0/cordova-plugin-openwith",
   "# Dependencies required by the hooks": "",
   "dependencies": {
-    "file-system": "^2.2.2",
     "path": "^0.12.7",
     "plist": "^3.0.6",
     "xcode": "^3.0.1"
