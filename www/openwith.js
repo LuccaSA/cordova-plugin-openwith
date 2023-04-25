@@ -1,23 +1,16 @@
-function initOpenwithPlugin(root) {
-  "use strict";
+"use strict";
 
-  // imports
-  // var cordova = require('cordova')
-
-  let PLUGIN_NAME = "OpenWithPlugin";
-
+var exec = require("cordova/exec");
+var PLUGIN_NAME = "OpenWithPlugin";
+function initOpenwithPlugin() {
   // the returned object
-  let openwith = {};
-
-  //
-  // exported constants
-  //
+  var openwith = {};
 
   // logging levels
-  let DEBUG = (openwith.DEBUG = 0);
-  let INFO = (openwith.INFO = 10);
-  let WARN = (openwith.WARN = 20);
-  let ERROR = (openwith.ERROR = 30);
+  var DEBUG = (openwith.DEBUG = 0);
+  var INFO = (openwith.INFO = 10);
+  var WARN = (openwith.WARN = 20);
+  var ERROR = (openwith.ERROR = 30);
 
   // actions
   openwith.SEND = "SEND";
@@ -28,43 +21,40 @@ function initOpenwithPlugin(root) {
   //
 
   // default verbosity level is to show errors only
-  let verbosity;
+  var verbosity;
 
   // list of registered handlers
-  let handlers;
+  var handlers;
 
   // list of intents sent to this app
   //
   // it's never cleaned up, so that newly registered handlers (especially those registered a bit too late)
   // will still receive the list of intents.
-  let intents;
+  var intents;
 
   // the logger function (defaults to console.log)
-  let logger;
-
-  // the cordova object (defaults to global one)
-  let cordova;
+  var logger;
 
   // has init() been called or not already
-  let initCalled;
+  var initCalled;
 
   // make sure a number is displayed with 2 digits
-  let twoDigits = function (n) {
-    return n < 10 ? `0${n}` : `${n}`;
+  var twoDigits = function twoDigits(n) {
+    return n < 10 ? "0".concat(n) : "".concat(n);
   };
 
   // format a date for display
-  let formatDate = function (now) {
-    let date = now ? new Date(now) : new Date();
-    let d = [date.getMonth() + 1, date.getDate()].map(twoDigits);
-    let t = [date.getHours(), date.getMinutes(), date.getSeconds()].map(
+  var formatDate = function formatDate(now) {
+    var date = now ? new Date(now) : new Date();
+    var d = [date.getMonth() + 1, date.getDate()].map(twoDigits);
+    var t = [date.getHours(), date.getMinutes(), date.getSeconds()].map(
       twoDigits
     );
-    return `${d.join("-")} ${t.join(":")}`;
+    return "".concat(d.join("-"), " ").concat(t.join(":"));
   };
 
   // format verbosity level for display
-  let formatVerbosity = function (level) {
+  var formatVerbosity = function formatVerbosity(level) {
     if (level <= DEBUG) return "D";
     if (level <= INFO) return "I";
     if (level <= WARN) return "W";
@@ -72,9 +62,14 @@ function initOpenwithPlugin(root) {
   };
 
   // display a log in the console only if the level is higher than current verbosity
-  let log = function (level, message) {
+  var log = function log(level, message) {
     if (level >= verbosity) {
-      logger(`${formatDate()} ${formatVerbosity(level)} openwith: ${message}`);
+      logger(
+        ""
+          .concat(formatDate(), " ")
+          .concat(formatVerbosity(level), " openwith: ")
+          .concat(message)
+      );
     }
   };
 
@@ -85,7 +80,6 @@ function initOpenwithPlugin(root) {
     handlers = [];
     intents = [];
     logger = console.log;
-    cordova = root.cordova;
     initCalled = false;
   };
 
@@ -95,11 +89,6 @@ function initOpenwithPlugin(root) {
   // change the logger function
   openwith.setLogger = function (value) {
     logger = value;
-  };
-
-  // change the cordova object (mostly for testing)
-  openwith.setCordova = function (value) {
-    cordova = value;
   };
 
   // change the verbosity level
@@ -114,7 +103,7 @@ function initOpenwithPlugin(root) {
       throw new Error("invalid verbosity level");
     }
     verbosity = value;
-    cordova.exec(null, null, PLUGIN_NAME, "setVerbosity", [value]);
+    exec(null, null, PLUGIN_NAME, "setVerbosity", [value]);
   };
 
   // retrieve the verbosity level
@@ -128,9 +117,8 @@ function initOpenwithPlugin(root) {
     log(DEBUG, "about()");
     return "cordova-plugin-openwith, (c) 2017 fovea.cc";
   };
-
-  let findHandler = function (callback) {
-    for (let i = 0; i < handlers.length; ++i) {
+  var findHandler = function findHandler(callback) {
+    for (var i = 0; i < handlers.length; ++i) {
       if (handlers[i] === callback) {
         return i;
       }
@@ -148,46 +136,43 @@ function initOpenwithPlugin(root) {
       throw new Error("handler already defined");
     }
     handlers.push(callback);
-    intents.forEach((intent) => {
+    intents.forEach(function (intent) {
       callback(intent);
     });
   };
-
   openwith.numHandlers = function () {
     log(DEBUG, "numHandler()");
     return handlers.length;
   };
-
   openwith.load = function (dataDescriptor, successCallback, errorCallback) {
-    let loadSuccess = function (base64) {
+    var loadSuccess = function loadSuccess(base64) {
       dataDescriptor.base64 = base64;
       if (successCallback) {
         successCallback(base64, dataDescriptor);
       }
     };
-    let loadError = function (err) {
+    var loadError = function loadError(err) {
       if (errorCallback) {
         errorCallback(err, dataDescriptor);
       }
     };
-    if (dataDescriptor.base64 !== null && typeof dataDescriptor.base64 !== 'undefined') {
+    if (
+      dataDescriptor.base64 !== null &&
+      typeof dataDescriptor.base64 !== "undefined"
+    ) {
       loadSuccess(dataDescriptor.base64);
     } else {
-      cordova.exec(loadSuccess, loadError, PLUGIN_NAME, "load", [
-        dataDescriptor,
-      ]);
+      exec(loadSuccess, loadError, PLUGIN_NAME, "load", [dataDescriptor]);
     }
   };
-
-  openwith.exit = () => {
+  openwith.exit = function () {
     log(DEBUG, "exit()");
-    cordova.exec(null, null, PLUGIN_NAME, "exit", []);
+    exec(null, null, PLUGIN_NAME, "exit", []);
   };
-
-  let onNewIntent = function (intent) {
-    log(DEBUG, `onNewIntent(${intent.action})`);
+  var onNewIntent = function onNewIntent(intent) {
+    log(DEBUG, "onNewIntent(".concat(intent.action, ")"));
     // process the new intent
-    handlers.forEach((handler) => {
+    handlers.forEach(function (handler) {
       handler(intent);
     });
     intents.push(intent);
@@ -208,30 +193,24 @@ function initOpenwithPlugin(root) {
     if (errorCallback && typeof errorCallback !== "function") {
       throw new Error("invalid error callback");
     }
-
-    let initSuccess = function () {
+    var initSuccess = function initSuccess() {
       log(DEBUG, "initSuccess()");
       if (successCallback) successCallback();
     };
-    let initError = function () {
+    var initError = function initError() {
       log(DEBUG, "initError()");
       if (errorCallback) errorCallback();
     };
-    let nativeLogger = function (data) {
-      let split = data.split(":");
-      log(+split[0], `[native] ${split.slice(1).join(":")}`);
+    var nativeLogger = function nativeLogger(data) {
+      var split = data.split(":");
+      log(+split[0], "[native] ".concat(split.slice(1).join(":")));
     };
-
-    cordova.exec(nativeLogger, null, PLUGIN_NAME, "setLogger", []);
-    cordova.exec(onNewIntent, null, PLUGIN_NAME, "setHandler", []);
-    cordova.exec(initSuccess, initError, PLUGIN_NAME, "init", []);
+    exec(nativeLogger, null, PLUGIN_NAME, "setLogger", []);
+    exec(onNewIntent, null, PLUGIN_NAME, "setHandler", []);
+    exec(initSuccess, initError, PLUGIN_NAME, "init", []);
   };
-
   return openwith;
 }
 
 // Export the plugin object
-let openwith = initOpenwithPlugin(this);
-module.exports = openwith;
-this.plugins = this.plugins || {};
-this.plugins.openwith = openwith;
+module.exports = initOpenwithPlugin();
