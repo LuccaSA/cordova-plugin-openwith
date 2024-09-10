@@ -53,7 +53,7 @@ function arrayFilterUnique(value, index, self) {
 
 function addEntitlments(filePath, preferences) {
     var plist = require('plist');
-    var plistContent = plist.parse(fs.readFileSync(filePath, 'utf8'));
+    var plistContent = fs.existsSync(filePath) ? plist.parse(fs.readFileSync(filePath, 'utf8')) : {};
     var parent = 'com.apple.security.application-groups';
     for (var i = 0; i < preferences.length; i++) {
         var pref = preferences[i];
@@ -341,6 +341,10 @@ module.exports = function (context) {
     // Add App Group to entitlments
     addEntitlments(path.join(iosFolder(context), projectName, 'Entitlements-Debug.plist'), preferences);
     addEntitlments(path.join(iosFolder(context), projectName, 'Entitlements-Release.plist'), preferences);
+    // ShareExt.entitlments is needed and must be linked to root project
+    addEntitlments(path.join(iosFolder(context), 'ShareExt.entitlements'), preferences);
+    var customTemplateKey = pbxProject.findPBXGroupKey({name: 'CustomTemplate'});
+    pbxProject.addFile('ShareExt.entitlements', customTemplateKey, { lastKnownFileType: 'text.plist.entitlements' });
 
     //Add development team and provisioning profile
     var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'SHAREEXT_PROVISIONING_PROFILE');
