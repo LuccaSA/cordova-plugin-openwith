@@ -31,7 +31,9 @@
 #import <Social/Social.h>
 #import "ShareViewController.h"
 
-@interface ShareViewController : SLComposeServiceViewController {
+// previous implemented interface caused issues on iOS 26, fixed thanks to this comment
+// https://github.com/Expensify/react-native-share-menu/issues/256#issuecomment-1613459523
+@interface ShareViewController : SLComposeViewController {
 	int _verbosityLevel;
 	NSUserDefaults *_userDefaults;
 	NSString *_backURL;
@@ -169,7 +171,7 @@
 		}
 		NSDictionary *dict = @{
 			@"text": @"",
-			@"backURL": self.backURL,
+			@"backURL": self.backURL ? self.backURL : @"",
 			@"data" : data,
 			@"uti": uti,
 			@"utis": utis,
@@ -293,10 +295,12 @@
 // This is called at the point where the Post dialog is about to be shown.
 // We use it to store the _hostBundleID
 - (void) willMoveToParentViewController: (UIViewController*)parent {
-	NSString *hostBundleID = [parent valueForKey:(@"_hostBundleID")];
-	self.backURL = [self backURLFromBundleID:hostBundleID];
+	@try {
+		NSString *hostBundleID = [parent valueForKey:(@"_hostBundleID")];
+		self.backURL = [self backURLFromBundleID:hostBundleID];
+	} @catch (NSException *e) {
+		self.backURL = nil;
+	}
 }
 
 @end
-
-
